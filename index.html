@@ -1,0 +1,195 @@
+: <html>
+<head>
+<title> Exercice</title>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+<style>
+    body {
+      background-color: #f0f0f0; /* Choose your preferred background color */
+    }
+  </style>
+</head>
+<body>
+  <div class="container mt-5">
+    <div id="maxScoreDisplay" class="text-right mt-3" style="font-size: 16px;">Max Score</div>
+    <div class="text-center">
+      <h2>Découvrez le nombre mystérieux!!!</h2>
+      <i>Vous avez 10 essais pour trouver le nombre choisi par l'ordinateur</i><br>
+      <i>au hasard entre 1 et 100.</i><br><br>
+    </div>
+
+    <form name="jeu" class="mb-3">
+      <div class="row">
+        <div class="col">
+          <input type="reset" class="btn btn-primary" value="Nouveau jeu" onclick="initialisation()">
+        </div>
+        <div class="col">
+          <input type="button" class="btn btn-danger" value="Quitter" id="quiter" onclick="quitter()">
+        </div>
+        <div class="col">
+          <input type="button" class="btn btn-success" value="Réponse" onclick="affiche()">
+        </div>
+      </div>
+
+      <div class="row mt-3">
+        <div class="col">
+          <label for="propInput">Proposition:</label>
+          <input type="text" id="propInput" class="form-control" onkeydown="if(event.key === 'Enter') verifier()">
+        </div>
+        <div class="col">
+          <label for="essai">N°essai:</label>
+          <input type="text" name="essai" class="form-control">
+        </div>
+      </div>
+
+      <div class="row mt-3">
+        <div class="col">
+          <label for="msg">Message:</label>
+          <input type="text" name="msg" class="form-control">
+        </div>
+        <div class="col">
+          <label for="rep">Réponse:</label>
+          <input type="text" name="rep" class="form-control" id="rep">
+        </div>
+      </div>
+    </form>
+
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Essai</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody class="historique"></tbody>
+      </table>
+    </div>
+
+   
+  </div>
+
+  <!-- Add Bootstrap JS and Popper.js scripts (required for Bootstrap components) -->
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+
+<script>
+    var a = Math.round(Math.random()*100)
+    let essai=0; 
+    let table=[];
+    let his = document.querySelector('.historique')   
+    function initialisation() {
+    a = Math.round(Math.random() * 100);
+    console.log(a);
+    his.innerHTML = '';
+    // Clear localStorage when starting a new game
+    let lastEssai = localStorage.getItem(essai);
+    let minEssais = localStorage.getItem("maxScore") || "_";
+    updateMaxScoreDisplay(minEssais);
+    localStorage.clear();
+    localStorage.setItem('maxScore',minEssais);
+    essai = 0;
+    document.jeu.essai.value = essai;
+   
+}
+    //loading old data
+    window.onload = function () {
+        let resumeGame = confirm("Do you want to resume the game?");
+    
+    if (!resumeGame) {
+        initialisation();
+    } else {
+        
+    
+         let lastEssai = localStorage.getItem('lastEssai');
+        for (let i = 1; i <= 15; i++) {
+            let savedGuess = localStorage.getItem(i);
+            if (savedGuess) {
+                let row = document.createElement('tr');
+                let histor = document.createElement('td');
+                histor.innerHTML = i;
+                let val = document.createElement('td');
+                val.innerHTML = savedGuess;
+                row.appendChild(histor);
+                row.appendChild(val);
+                his.appendChild(row);
+            }
+        }
+        let minEssais = localStorage.getItem("maxScore") || 0
+        updateMaxScoreDisplay(minEssais);
+       
+    if (lastEssai) {
+        essai = parseInt(lastEssai, 10);
+        document.jeu.essai.value = essai;
+    }
+    };
+    function updateMaxScoreDisplay(score) {
+      let maxScoreDisplay = document.getElementById("maxScoreDisplay");
+      maxScoreDisplay.textContent = "Max Score: " + score;
+    }
+    }
+    function affiche(){
+        //document.getElementById("rep").textContent=a;
+        document.jeu.rep.value= "la valeur recherchée est :" + a;
+    }
+
+    function verifier() {
+        let x = document.getElementById('propInput').value;
+        essai = essai + 1;
+        document.jeu.essai.value = essai;
+
+        if (essai < 15) {
+            localStorage.setItem(essai, x);
+            localStorage.setItem('lastEssai', essai)
+           
+           
+
+            if (x > a) {
+                document.jeu.msg.value = "c'est moins";
+            } else if (x < a) {
+                document.jeu.msg.value = "c'est plus";
+            } else {
+                document.jeu.msg.value = "bravo ";
+                let lastEssai = Number(localStorage.getItem('lastEssai'));
+                let minEssais = Number(localStorage.getItem("maxScore"))|| lastEssai;
+                if(lastEssai<= minEssais){
+                   localStorage.setItem('maxScore',lastEssai);
+                   updateMaxScoreDisplay(lastEssai);
+                }
+                minEssais=localStorage.getItem('maxScore');
+                localStorage.clear();
+                localStorage.setItem('maxScore',minEssais);  
+            }
+        } else {
+            alert("vous avez dépassé le nombre maximum d'essais ");
+            initialisation();
+        }
+        console.log(x, essai);
+        let row = document.createElement('tr');
+        let histor = document.createElement('td');
+        histor.innerHTML = essai;
+        let val = document.createElement('td');
+        val.innerHTML = x;
+        row.appendChild(histor);
+        row.appendChild(val);
+        his.appendChild(row);
+        if(lastEssai<= minEssais){essai = 1;
+    document.jeu.essai.value = essai;
+    }}
+    function quitter() {
+      let confirmQuit = confirm("Do you really want to quit the game?");
+      if (confirmQuit) {
+        closeWindow();
+      }
+    }
+
+    function closeWindow() {
+      window.close();
+    }
+
+</script>
+</body>
+
+</html> 
+
