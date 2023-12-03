@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Guessing Game</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+  <style>
+    body {
+      background-color: #f0f0f0;
+    }
+
+    .container {
+      margin-top: 5rem;
+    }
+
+    #maxScoreDisplay {
+      font-size: 16px;
+    }
+
+    .center-text {
+      text-align: center;
+    }
+
+    .btn-group {
+      margin-top: 1rem;
+    }
+
+    .player-container {
+      margin-top: 2rem;
+    }
+
+    .input-group {
+      margin-bottom: 1rem;
+    }
+
+    #player1Input, #player2Input {
+      width: 100%;
+    }
+
+    .table-responsive {
+      margin-top: 2rem;
+    }
+
+    .incorrect-guess {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="maxScoreDisplay" class="text-right mt-3">Max Score</div>
+
+    <div class="center-text">
+      <h2>Guessing Game - Two Players</h2>
+      <i>Take turns guessing the correct number between 1 and 100.</i><br>
+      <i>The player with the lowest score wins!</i><br><br>
+    </div>
+
+    <div class="row btn-group">
+      <div class="col">
+        <input type="reset" class="btn btn-primary" value="New Game" onclick="startNewGame()">
+      </div>
+    </div>
+
+    <div class="row player-container">
+      <div class="col">
+        <h3>Player 1</h3>
+        <div class="input-group">
+          <label for="player1Input">Enter your guess:</label>
+          <input type="number" id="player1Input" class="form-control" disabled>
+        </div>
+        <p class="incorrect-guess" id="player1IncorrectGuess"></p>
+        <button class="btn btn-success" onclick="submitGuess('player1')">Submit Guess</button>
+      </div>
+
+      <div class="col">
+        <h3>Player 2</h3>
+        <div class="input-group">
+          <label for="player2Input">Enter your guess:</label>
+          <input type="number" id="player2Input" class="form-control" disabled>
+        </div>
+        <p class="incorrect-guess" id="player2IncorrectGuess"></p>
+        <button class="btn btn-success" onclick="submitGuess('player2')">Submit Guess</button>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Player</th>
+            <th>Guess</th>
+          </tr>
+        </thead>
+        <tbody class="guess-history"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Add Bootstrap JS and Popper.js scripts (required for Bootstrap components) -->
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+  <script src="">
+let targetNumber = 0;
+let currentPlayer = 'player1';
+let player1Score = 0;
+let player2Score = 0;
+let lastIncorrectGuessPlayer1 = null;
+let lastIncorrectGuessPlayer2 = null;
+
+function startNewGame() {
+  targetNumber = Math.floor(Math.random() * 100) + 1;
+  document.getElementById('player1Input').disabled = false;
+  document.getElementById('player2Input').disabled = true;
+  document.getElementById('player1Input').focus();
+}
+
+function submitGuess(player) {
+  const inputElement = document.getElementById(`${player}Input`);
+  const incorrectGuessElement = document.getElementById(`${player}IncorrectGuess`);
+  const guess = parseInt(inputElement.value);
+
+  if (guess === targetNumber) {
+    updateScore(player);
+    displayResult(player);
+    updateScoreboard();
+    saveToLocalStorage();
+  } else {
+    updateLastIncorrectGuess(player, guess);
+    incorrectGuessElement.textContent = `Last Incorrect Guess: ${guess}`;
+    switchPlayers();
+  }
+
+  inputElement.value = '';
+  inputElement.disabled = true;
+
+  // Update guess history
+  updateGuessHistory(player, guess);
+}
+
+function updateLastIncorrectGuess(player, guess) {
+  if (player === 'player1') {
+    lastIncorrectGuessPlayer1 = guess;
+  } else {
+    lastIncorrectGuessPlayer2 = guess;
+  }
+}
+
+function displayResult(player) {
+  alert(`Congratulations! ${player} is the winner with a score of ${player1Score + player2Score} guesses.`);
+}
+
+function updateScore(player) {
+  if (player === 'player1') {
+    player1Score++;
+    lastIncorrectGuessPlayer1 = null; // Reset last incorrect guess
+  } else {
+    player2Score++;
+    lastIncorrectGuessPlayer2 = null; // Reset last incorrect guess
+  }
+}
+
+function updateScoreboard() {
+  const player1ScoreElement = document.getElementById('player1Score');
+  const player2ScoreElement = document.getElementById('player2Score');
+
+  player1ScoreElement.textContent = `Player 1 Score: ${player1Score}`;
+  player2ScoreElement.textContent = `Player 2 Score: ${player2Score}`;
+}
+
+function saveToLocalStorage() {
+  const previousBestScore = localStorage.getItem('bestScore');
+
+  if (!previousBestScore || player1Score + player2Score < previousBestScore) {
+    localStorage.setItem('bestScore', player1Score + player2Score);
+  }
+}
+
+function updateGuessHistory(player, guess) {
+  const guessHistoryElement = document.querySelector('.guess-history');
+
+  const newRow = document.createElement('tr');
+  const playerCell = document.createElement('td');
+  const guessCell = document.createElement('td');
+
+  playerCell.textContent = player;
+  guessCell.textContent = guess;
+
+  newRow.appendChild(playerCell);
+  newRow.appendChild(guessCell);
+
+  guessHistoryElement.appendChild(newRow);
+}
+
+function switchPlayers() {
+  currentPlayer = currentPlayer === 'player1' ? 'player2' : 'player1';
+  document.getElementById('player1Input').disabled = !document.getElementById('player1Input').disabled;
+  document.getElementById('player2Input').disabled = !document.getElementById('player2Input').disabled;
+
+  if (!document.getElementById('player1Input').disabled) {
+    document.getElementById('player1Input').focus();
+  } else {
+    document.getElementById('player2Input').focus();
+  }
+}
+
+
+
+  </script>
+</body>
+</html>
