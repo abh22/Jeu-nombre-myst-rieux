@@ -104,6 +104,14 @@
         <tbody class="guess-history"></tbody>
       </table>
     </div>
+    <!-- hidden form for updating history table -->
+    <!-- Add this form element somewhere in your HTML, e.g., before the script tags -->
+<form id="historyForm" action="update_history.php" method="post">
+  <input type="hidden" id="playerNameInput" name="playerName">
+  <input type="hidden" id="attemptInput" name="attempt">
+  <input type="hidden" id="guessInput" name="guess">
+</form>
+
   </div>
 
   <!-- Add Bootstrap JS and Popper.js scripts (required for Bootstrap components) -->
@@ -179,6 +187,8 @@ let player1Score = 0;
 let player2Score = 0;
 let lastIncorrectGuessPlayer1 = null;
 let lastIncorrectGuessPlayer2 = null;
+let attempt_pl1 = 0; // Initial attempt count for player 1
+let attempt_pl2 = 0;
 
 function startNewGame() {
   targetNumber = Math.floor(Math.random() * 100) + 1;
@@ -214,6 +224,12 @@ function submitGuess(player) {
   const inputElement = document.getElementById(`${player}Input`);
   const incorrectGuessElement = document.getElementById(`${player}IncorrectGuess`);
   const guess = parseInt(inputElement.value);
+   // Increment attempt count
+   if (player === 'player1') {
+    attempt_pl1++;
+  } else {
+    attempt_pl2++;
+  }
 
   if (guess === targetNumber) {
     updateScore(player);
@@ -276,16 +292,28 @@ function updateGuessHistory(player, guess) {
 
   const newRow = document.createElement('tr');
   const playerCell = document.createElement('td');
+  const attemptCell = document.createElement('td'); // Added for attempt count
   const guessCell = document.createElement('td');
 
   playerCell.textContent = player;
   guessCell.textContent = guess;
 
+  // Display attempt count based on the player
+  if (player === 'player1') {
+    
+    attemptCell.textContent = `Attempt: ${attempt_pl1}`;
+  } else {
+   
+    attemptCell.textContent = `Attempt: ${attempt_pl2}`;
+  }
+
   newRow.appendChild(playerCell);
+  newRow.appendChild(attemptCell); // Added attempt cell
   newRow.appendChild(guessCell);
 
   guessHistoryElement.appendChild(newRow);
 }
+
 
 function switchPlayers() {
   currentPlayer = currentPlayer === 'player1' ? 'player2' : 'player1';

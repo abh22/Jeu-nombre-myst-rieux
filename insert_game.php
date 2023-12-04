@@ -5,7 +5,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = "root";
     $password = "";
     $dbname = "guessgame";
-
     // Create connection
     $conn = new mysqli($servername, $username, $password, $dbname);
 
@@ -20,21 +19,27 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Insert game instance into the 'game' table
     $sql = "INSERT INTO game (player1, player2) VALUES ('$player1Name', '$player2Name')";
-    // Retrieve the ID of the inserted game instance
-    $gameId = $conn->insert_id;
 
-    // Create a table for the game history
-    $createTableSql = "CREATE TABLE game_history_$gameId (
-                        id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-                        player VARCHAR(50) NOT NULL,
-                        attempt int(2) UNSIGNED,
-                        guess int(2) UNSIGNED,
-                        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                      )";
-    if ($conn->query($createTableSql) !== TRUE) {
-    //     echo "New game instance added successfully";
-    // } else {
-        echo "Error: " . $sql . "<br>" . $conn->error;
+    if ($conn->query($sql) === TRUE) {
+        // Retrieve the ID of the inserted game instance
+        $gameId = $conn->insert_id;
+
+        // Create a table for the game history
+        $createTableSql = "CREATE TABLE game_history_$gameId (
+                            id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                            player VARCHAR(50) NOT NULL,
+                            attempt int(2) UNSIGNED,
+                            guess int(2) UNSIGNED,
+                            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                          )";
+
+        if ($conn->query($createTableSql) === TRUE) {
+            echo "New game instance and history table added successfully";
+        } else {
+            echo "Error creating game history table: " . $conn->error;
+        }
+    } else {
+        echo "Error inserting game instance: " . $conn->error;
     }
 
     $conn->close();
