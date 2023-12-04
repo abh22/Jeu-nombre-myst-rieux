@@ -47,6 +47,15 @@
 </head>
 <body>
   <div class="container">
+    <div class="row">
+      <div class="col">
+        <p id="player1Score">Player 1 Score: 0</p>
+      </div>
+      <div class="col">
+        <p id="player2Score">Player 2 Score: 0</p>
+      </div>
+    </div>
+    
     <div id="maxScoreDisplay" class="text-right mt-3">Max Score</div>
 
     <div class="center-text">
@@ -63,17 +72,18 @@
 
     <div class="row player-container">
       <div class="col">
-        <h3>Player 1</h3>
+        <h3 id="player1Section">Player 1</h3>
+        
         <div class="input-group">
           <label for="player1Input">Enter your guess:</label>
-          <input type="number" id="player1Input" class="form-control" >
+          <input type="number" id="player1Input" class="form-control" disabled>
         </div>
         <p class="incorrect-guess" id="player1IncorrectGuess"></p>
         <button class="btn btn-success" onclick="submitGuess('player1')">Submit Guess</button>
       </div>
 
       <div class="col">
-        <h3>Player 2</h3>
+        <h3 id="player2Section">Player 2</h3>
         <div class="input-group">
           <label for="player2Input">Enter your guess:</label>
           <input type="number" id="player2Input" class="form-control" disabled>
@@ -100,7 +110,69 @@
   <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-  <script src="">
+  <script>
+    window.onload = function() {
+  // Prompt for Player 1 name
+  var player1Name = prompt("Enter Player 1 name:");
+  if (player1Name === null || player1Name.trim() === "") {
+    player1Name = "Player 1"; // Default name if the user cancels or enters an empty string
+  }
+
+  // Prompt for Player 2 name
+  var player2Name = prompt("Enter Player 2 name:");
+  if (player2Name === null || player2Name.trim() === "") {
+    player2Name = "Player 2"; // Default name if the user cancels or enters an empty string
+  }
+  var form = document.createElement('form');
+  form.action = 'insert_game.php';
+  form.method = 'post';
+
+  // Create hidden input fields for player names
+  var player1Input = document.createElement('input');
+  player1Input.type = 'hidden';
+  player1Input.name = 'player1Name';
+  player1Input.value = player1Name;
+
+  var player2Input = document.createElement('input');
+  player2Input.type = 'hidden';
+  player2Input.name = 'player2Name';
+  player2Input.value = player2Name;
+
+  // Append input fields to the form
+  form.appendChild(player1Input);
+  form.appendChild(player2Input);
+  document.getElementById('player1Section').innerHTML = `
+        <h3>${player1Name}</h3>`
+        document.getElementById('player2Section').innerHTML = `
+    <h3>${player2Name}</h3>`
+  // Append the form to the body and submit it
+  document.body.appendChild(form);
+  // Submit the form asynchronously using Fetch API
+  fetch(form.action, {
+    method: form.method,
+    body: new FormData(form),
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    return response.text();
+  })
+  .then(data => {
+    console.log(data); // Output the response from the server (for debugging)
+    // You can handle success here, for example, show a success message
+    alert('Game instance added successfully!');
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    // Handle errors if needed
+  });
+
+  // Prevent the form from being submitted in the traditional way
+  return false;
+
+ 
+}
 let targetNumber = 0;
 let currentPlayer = 'player1';
 let player1Score = 0;
@@ -110,10 +182,33 @@ let lastIncorrectGuessPlayer2 = null;
 
 function startNewGame() {
   targetNumber = Math.floor(Math.random() * 100) + 1;
+  player1Score = 0;
+  player2Score = 0;
+  lastIncorrectGuessPlayer1 = null;
+  lastIncorrectGuessPlayer2 = null;
+
+  // Enable player 1 input and disable player 2 input
   document.getElementById('player1Input').disabled = false;
   document.getElementById('player2Input').disabled = true;
+
+  // Clear input values
+  document.getElementById('player1Input').value = '';
+  document.getElementById('player2Input').value = '';
+
+  // Clear incorrect guess messages
+  document.getElementById('player1IncorrectGuess').textContent = '';
+  document.getElementById('player2IncorrectGuess').textContent = '';
+
+  // Clear guess history
+  document.querySelector('.guess-history').innerHTML = '';
+
+  // Update score display
+  updateScoreboard();
+
+  // Set focus to player 1 input
   document.getElementById('player1Input').focus();
 }
+
 
 function submitGuess(player) {
   const inputElement = document.getElementById(`${player}Input`);
